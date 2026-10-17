@@ -1,6 +1,0 @@
-# Ignorar artefactos locales y entornos virtuales
-.venv/
-__pycache__/
-*.pyc
-mlruns/
-.ipynb_checkpoints/
