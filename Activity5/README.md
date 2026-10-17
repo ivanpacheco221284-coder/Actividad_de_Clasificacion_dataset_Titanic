@@ -1,4 +1,5 @@
 Actividad 5 - Clasificación con Titanic
+
 Descripción
 Este repositorio contiene una actividad de clasificación sobre el dataset Titanic. El objetivo es preparar los datos, entrenar y comparar al menos dos algoritmos, ajustar hiperparámetros, evaluar con validación cruzada y registrar los experimentos con MLflow.
 
