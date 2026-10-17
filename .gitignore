@@ -1,16 +1,14 @@
-# .gitignore
-
+# Byte-compiled / optimized / DLL files
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
-.venv/
-venv/
-.env
-.ipynb_checkpoints/
-mlruns/
-artifacts/
+*.py[cod]
+*$py.class
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# MLflow local runs
+Activity5/mlruns/
+
+# Mac
 .DS_Store
-.idea/
-.vscode/
-*.sqlite3
+
