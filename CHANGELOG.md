@@ -1,12 +1,4 @@
-# CHANGELOG
+# Changelog
 
-## Versión 1.0 - Entrega inicial
-- Añadidos scripts para descargar datos, preparar datos y entrenar modelos.
-- Notebook de ejemplo para ejecutar en Colab.
-- Integración con MLflow (registro de parámetros, métricas y artefactos).
-
-### Experimentos clave
-- Random Forest: CV accuracy X. (Ejecutar scripts para ver resultados en mlflow UI)
-- Logistic Regression: CV accuracy Y.
-
-Observaciones finales: Se registró trazabilidad y reproducibilidad mediante MLflow. Ver carpeta `reports/` para artefactos.
+- 2026-10-17: Proyecto inicial creado con scripts para descarga, preparación, entrenamiento y registro en MLflow.
+- Se incluyen: dataset download, datos_prep.py, train.py, notebook de entrenamiento, requirements y documentación.

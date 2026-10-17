@@ -1,8 +1,8 @@
 pandas
 numpy
 scikit-learn
-xgboost
 mlflow
-joblib
 matplotlib
 seaborn
+joblib
+requests

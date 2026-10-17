@@ -1,7 +1,7 @@
-.gitignore
+# Ignora archivos generados localmente
 __pycache__/
-*.pyc
-.venv/
 mlruns/
-reports/
-.ipynb_checkpoints/
+.env
+*.pyc
+datos/datos_limp/*.csv
+.DS_Store
