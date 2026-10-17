@@ -1,59 +1,59 @@
-# Actividad de Clasificación: Titanic
+# Actividad de Clasificación - Titanic
 
-Repositorio: Actividad_de_Clasificacion_dataset_Titanic
+Este repositorio contiene la actividad 5: preparación de datos, entrenamiento de modelos y registro con MLflow sobre el dataset Titanic.
 
-Este repositorio contiene el código, notebook y guías para reproducir la actividad solicitada: preparación de datos, entrenamiento y ajuste de modelos, y registro de experimentos con MLflow.
+Estructura:
 
-Estructura del repositorio
+Actividad5/
+│── datos/
+│   ├── datos_ini/ (dataset original)
+│   └── datos_limp/ (datos limpios preparados)
+│── fuentes/
+│   ├── entrena.ipynb
+│   ├── datos_prep.py
+│   └── train.py
+│── README.md
+│── CHANGELOG.md
 
-Actividad_de_Clasificacion_dataset_Titanic/
-├── datos/
-│   ├── datos_ini/ (se descarga titanic.csv al ejecutar los scripts)
-│   └── datos_limp/ (placeholder)
-├── fuentes/
-│   ├── entrena.ipynb (notebook listo para Colab)
-│   ├── datos_prep.py (funciones de limpieza y carga)
-│   └── train.py (script para entrenamiento y registro en MLflow)
-├── README.md (este archivo)
-├── CHANGELOG.md
-└── requirements.txt
+Reproducción rápida:
 
-Requisitos
+1. Crear entorno virtual e instalar dependencias:
 
-Instalar (por ejemplo en Colab ejecuta):
+python -m venv .venv
+source .venv/bin/activate  # o .venv\Scripts\activate en Windows
+pip install -r requirements.txt
 
-!pip install scikit-learn pandas mlflow xgboost joblib seaborn matplotlib
+2. Descargar dataset:
 
-Instrucciones de reproducción (Colab o local)
+python datos/download_data.py
 
-1. Abrir `fuentes/entrena.ipynb` en Colab y ejecutar las celdas en orden. Esto:
-   - instalará dependencias
-   - descargará el dataset Titanic y lo almacenará en datos/datos_ini/titanic.csv
-   - ejecutará `fuentes/train.py` para RandomForest y LogisticRegression
-   - registrará resultados en `mlruns/` (directorio local)
+3. Preparar datos y entrenar (ejemplo):
 
-2. Alternativamente ejecutar localmente:
-   - python3 -m venv venv && source venv/bin/activate
-   - pip install -r requirements.txt
-   - python3 fuentes/train.py --model rf --n-splits 5 --experiment-name Titanic_Actividad5
-   - python3 fuentes/train.py --model lr --n-splits 5 --experiment-name Titanic_Actividad5
+python fuentes/datos_prep.py
+python fuentes/train.py --model random_forest --experiment-name Titanic_Classification
 
-MLflow
+4. Ejecutar el notebook `fuentes/entrena.ipynb` en Colab o local.
 
-El tracking URI por defecto es el directorio `mlruns/` dentro del repo (archivo). Para arrancar la interfaz localmente:
+MLflow:
 
-mlflow ui --backend-store-uri file://$(pwd)/mlruns
+- Por defecto, los runs se registran en mlruns/ localmente. Para verlos:
 
-Evaluación y métricas
+mlflow ui --port 5000
 
-Se registran métricas promedios por validación cruzada: accuracy, precision, recall y f1. Además se guardan los artefactos `best_model_{model}.pkl` y `summary.json` con parámetros y métricas.
+- En Colab o entorno remoto, configure MLflow tracking URI a un servidor remoto si desea.
 
-Decisiones y consideraciones
+Decisiones de limpieza:
 
-- Se usó LogisticRegression y RandomForest para comparación (clasificación binaria: Survived).
-- Se hicieron transformaciones simples: imputación por mediana para Age/Fare y one-hot para Embarked.
-- Se realizó búsqueda de hiperparámetros con GridSearchCV y validación estratificada.
+- Se eliminaron columnas irrelevantes: PassengerId, Name, Ticket, Cabin.
+- Se imputó Age y Fare con la mediana.
+- Se codificó Sex a 0/1 y se aplicó one-hot a Embarked.
+- Se añadió FamilySize.
 
-Contacto
+Modelos probados:
 
-Repositorio creado para la entrega de la actividad. Si necesitas que suba resultados de MLflow (capturas de pantalla) o que ejecute entrenamientos remotos, indícalo.
+- Regresión logística (scikit-learn)
+- Random Forest (scikit-learn)
+- XGBoost (opcional)
+
+Métricas registradas: accuracy, precision, recall, f1, roc_auc (si está disponible).
+

@@ -1,5 +1,7 @@
-# Ignorar entornos y artefactos
-venv/
+.gitignore
 __pycache__/
+*.pyc
+.venv/
 mlruns/
-outputs/
+reports/
+.ipynb_checkpoints/

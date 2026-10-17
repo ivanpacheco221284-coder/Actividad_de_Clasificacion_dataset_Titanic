@@ -1,7 +1,8 @@
-scikit-learn
 pandas
-mlflow
+numpy
+scikit-learn
 xgboost
+mlflow
 joblib
-seaborn
 matplotlib
+seaborn

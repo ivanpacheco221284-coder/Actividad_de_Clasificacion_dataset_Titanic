@@ -1,125 +1,138 @@
-"""train.py
-
-Script ejecutable para entrenar modelos sobre Titanic, hacer búsqueda de hiperparámetros
-y loggear resultados (parámetros, métricas y artefactos) en MLflow.
-
-Uso (ejemplo):
-python fuentes/train.py --model rf --n-splits 5 --experiment-name Titanic_Actividad5
 """
-
+Script de entrenamiento y registro con MLflow.
+Permite seleccionar modelo entre logistic_regression, random_forest y xgboost.
+Registra parámetros, métricas y artefactos (modelo, reportes).
+"""
 import os
 import argparse
-import joblib
-import json
-import numpy as np
-import pandas as pd
-from sklearn.pipeline import Pipeline
-from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import StratifiedKFold, cross_validate, GridSearchCV
-from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 import mlflow
 import mlflow.sklearn
+import joblib
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import StratifiedKFold, GridSearchCV, cross_val_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
+import xgboost as xgb
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
 
-from fuentes.datos_prep import load_data, preprocess, download_dataset
+from fuentes.datos_prep import load_raw, basic_clean, save_clean
 
 
-def get_models_and_params():
-    models = {
-        'lr': (LogisticRegression(solver='liblinear', random_state=42), {
-            'clf__C': [0.01, 0.1, 1.0, 10.0]
-        }),
-        'rf': (RandomForestClassifier(random_state=42), {
-            'clf__n_estimators': [50, 100],
-            'clf__max_depth': [None, 5, 10]
-        })
+MODEL_MAP = {
+    'logistic_regression': LogisticRegression(max_iter=1000),
+    'random_forest': RandomForestClassifier(random_state=42),
+    'xgboost': xgb.XGBClassifier(use_label_encoder=False, eval_metric='logloss', random_state=42)
+}
+
+PARAM_GRID = {
+    'logistic_regression': {
+        'clf__C': [0.01, 0.1, 1.0, 10.0]
+    },
+    'random_forest': {
+        'clf__n_estimators': [50, 100],
+        'clf__max_depth': [None, 5, 10]
+    },
+    'xgboost': {
+        'clf__n_estimators': [50, 100],
+        'clf__max_depth': [3, 5]
     }
-    return models
+}
 
 
-def run_training(model_key='rf', n_splits=5, experiment_name='Titanic_Actividad5', output_dir='outputs'):
-    os.makedirs(output_dir, exist_ok=True)
-    # Prepare data
-    path = download_dataset()
-    df = load_data(path)
-    X, y = preprocess(df, training=True)
+def prepare_features(df: pd.DataFrame):
+    # target
+    y = df['Survived']
+    X = df.drop(columns=['Survived'])
+    return X, y
 
-    # Preprocessing pipeline: scale numeric features
-    numeric_features = ['Pclass','Age','SibSp','Parch','Fare']
-    numeric_transformer = StandardScaler()
 
-    preprocessor = ColumnTransformer(
-        transformers=[
-            ('num', numeric_transformer, numeric_features)
-        ], remainder='passthrough'
-    )
+def evaluate_model(model, X, y):
+    skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+    scoring = 'accuracy'
+    scores = cross_val_score(model, X, y, cv=skf, scoring=scoring)
+    return scores
 
-    models = get_models_and_params()
-    if model_key not in models:
-        raise ValueError(f"Modelo desconocido {model_key}. Opciones: {list(models.keys())}")
 
-    clf, param_grid = models[model_key]
+def main(args):
+    # Ensure data is prepared
+    if not os.path.exists('datos/datos_limp/titanic_clean.csv'):
+        print('Clean data not found, running data prep...')
+        df_raw = load_raw()
+        df_clean = basic_clean(df_raw)
+        save_clean(df_clean)
+    else:
+        df_clean = pd.read_csv('datos/datos_limp/titanic_clean.csv')
 
-    pipeline = Pipeline(steps=[('pre', preprocessor), ('clf', clf)])
+    X, y = prepare_features(df_clean)
+
+    # Build pipeline
+    pipe = Pipeline([
+        ('scaler', StandardScaler()),
+        ('clf', MODEL_MAP[args.model])
+    ])
+
+    param_grid = PARAM_GRID[args.model]
+
+    skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+    grid = GridSearchCV(pipe, param_grid=param_grid, cv=skf, scoring='accuracy', n_jobs=1)
 
     # MLflow experiment
-    mlflow.set_tracking_uri('file://' + os.path.abspath('mlruns'))
-    mlflow.set_experiment(experiment_name)
+    mlflow.set_experiment(args.experiment_name)
+    with mlflow.start_run(run_name=f"{args.model}_run") as run:
+        mlflow.log_param('model', args.model)
+        mlflow.log_param('param_grid', str(param_grid))
 
-    # Search with cross-validation
-    cv = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=42)
-    gs = GridSearchCV(pipeline, param_grid=param_grid, cv=cv, scoring='accuracy', n_jobs=-1)
+        grid.fit(X, y)
+        best = grid.best_estimator_
+        best_params = grid.best_params_
+        best_score = grid.best_score_
 
-    with mlflow.start_run(run_name=f"train_{model_key}") as run:
-        # Fit
-        gs.fit(X, y)
+        # Evaluate on cross-val (already best_score)
+        mlflow.log_metric('cv_accuracy', float(best_score))
 
-        best = gs.best_estimator_
-        best_params = gs.best_params_
-        cv_results = gs.cv_results_
+        # Additional metrics on predictions using cross_val
+        # We'll compute CV predictions to derive precision/recall/f1
+        from sklearn.model_selection import cross_val_predict
+        y_pred = cross_val_predict(best, X, y, cv=skf)
+        acc = accuracy_score(y, y_pred)
+        prec = precision_score(y, y_pred)
+        rec = recall_score(y, y_pred)
+        f1 = f1_score(y, y_pred)
+        try:
+            probas = cross_val_predict(best, X, y, cv=skf, method='predict_proba')[:,1]
+            auc = roc_auc_score(y, probas)
+        except Exception:
+            auc = None
 
-        # Predict on training via cross_val_predict or evaluate best on CV splits
-        scores = cross_validate(best, X, y, cv=cv, scoring=['accuracy','precision','recall','f1'], n_jobs=-1)
+        mlflow.log_metric('accuracy', float(acc))
+        mlflow.log_metric('precision', float(prec))
+        mlflow.log_metric('recall', float(rec))
+        mlflow.log_metric('f1', float(f1))
+        if auc is not None:
+            mlflow.log_metric('roc_auc', float(auc))
 
-        metrics = {
-            'accuracy_mean': float(np.mean(scores['test_accuracy'])),
-            'accuracy_std': float(np.std(scores['test_accuracy'])),
-            'precision_mean': float(np.mean(scores['test_precision'])),
-            'recall_mean': float(np.mean(scores['test_recall'])),
-            'f1_mean': float(np.mean(scores['test_f1'])),
-        }
+        # Log best params
+        for k, v in best_params.items():
+            mlflow.log_param(k, v)
 
-        # Log params and metrics
-        mlflow.log_params(best_params)
-        mlflow.log_metrics(metrics)
-
-        # Save best model artifact
-        model_path = os.path.join(output_dir, f"best_model_{model_key}.pkl")
+        # Save model artifact
+        os.makedirs('reports', exist_ok=True)
+        model_path = f'reports/{args.model}_best_model.joblib'
         joblib.dump(best, model_path)
         mlflow.log_artifact(model_path, artifact_path='models')
 
-        # Save a small json with summary
-        summary = {
-            'model': model_key,
-            'best_params': best_params,
-            'metrics': metrics
-        }
-        summary_path = os.path.join(output_dir, 'summary.json')
-        with open(summary_path, 'w') as f:
-            json.dump(summary, f, indent=2)
-        mlflow.log_artifact(summary_path)
+        # Save cleaned dataset used
+        mlflow.log_artifact('datos/datos_limp/titanic_clean.csv', artifact_path='data')
 
-        print("Entrenamiento completado. Run id:", run.info.run_id)
-        print("Metrics:", metrics)
-    return run.info.run_id
+        print('Run finished. Best CV accuracy:', best_score)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model', type=str, default='rf', help='lr or rf')
-    parser.add_argument('--n-splits', type=int, default=5)
-    parser.add_argument('--experiment-name', type=str, default='Titanic_Actividad5')
+    parser.add_argument('--model', type=str, default='random_forest', choices=list(MODEL_MAP.keys()))
+    parser.add_argument('--experiment-name', dest='experiment_name', type=str, default='Titanic_Classification')
     args = parser.parse_args()
-    run_training(model_key=args.model, n_splits=args.n_splits, experiment_name=args.experiment_name)
+    main(args)
