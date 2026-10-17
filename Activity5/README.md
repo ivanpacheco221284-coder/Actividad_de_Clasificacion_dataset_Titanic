@@ -13,9 +13,11 @@ Estructura del repositorio
 Actividad5/ ├── datos/ │ ├── datos_ini/ │ │ └── titanic.csv │ └── datos_limp/ │ └── titanic_limpio.csv ├── fuentes/ │ ├── entrena.ipynb │ ├── datos_prep.py │ └── train.py ├── mlruns/ │ └── README.md ├── README.md ├── CHANGELOG.md ├── requirements.txt └── .gitignore
 
 Dataset
+
 Se utiliza un dataset público de Titanic con variables como Pclass, Sex, Age, SibSp, Fare, Embarked y la variable objetivo Survived. Se incluye una versión original y una versión limpia.
 
 Requisitos
+
 Python >= 3.10
 pip install -r requirements.txt
 Instalación
