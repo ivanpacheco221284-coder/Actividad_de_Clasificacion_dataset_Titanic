@@ -1,7 +1,0 @@
-# Ignora archivos generados localmente
-__pycache__/
-mlruns/
-.env
-*.pyc
-datos/datos_limp/*.csv
-.DS_Store
