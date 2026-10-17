@@ -1,22 +1,24 @@
 # Actividad 5 - Clasificación con Titanic
 
-Descripción
+# Descripción
 Este repositorio contiene una actividad de clasificación sobre el dataset Titanic. El objetivo es preparar los datos, entrenar y comparar al menos dos algoritmos, ajustar hiperparámetros, evaluar con validación cruzada y registrar los experimentos con MLflow.
 
-Objetivo
+# Objetivo
 Preparar los datos y documentar las decisiones de limpieza.
 entrenar al menos 2 modelos de clasificación: Regresión Logística y Random Forest.
 Realizar ajuste de hiperparámetros con validación cruzada.
 Registrar parámetros, métricas y artefactos en MLflow.
 Generar una guía que permita reproducir el flujo completo.
-Estructura del repositorio
+
+# Estructura del repositorio
+
 Actividad5/ ├── datos/ │ ├── datos_ini/ │ │ └── titanic.csv │ └── datos_limp/ │ └── titanic_limpio.csv ├── fuentes/ │ ├── entrena.ipynb │ ├── datos_prep.py │ └── train.py ├── mlruns/ │ └── README.md ├── README.md ├── CHANGELOG.md ├── requirements.txt └── .gitignore
 
-Dataset
+# Dataset
 
 Se utiliza un dataset público de Titanic con variables como Pclass, Sex, Age, SibSp, Fare, Embarked y la variable objetivo Survived. Se incluye una versión original y una versión limpia.
 
-Requisitos
+# Requisitos
 
 Python >= 3.10
 pip install -r requirements.txt
