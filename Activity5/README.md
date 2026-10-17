@@ -60,7 +60,11 @@ ajuste de hiperparámetros,
 evaluación cruzada,
 registro de experimentos en MLflow,
 documentación del proyecto.
-Referencias
+
+# Referencias
+
 Dataset Titanic: https://github.com/datasciencedojo/datasets/blob/master/titanic.csv
+
 MLflow: https://mlflow.org/
+
 Scikit-learn: https://scikit-learn.org/
