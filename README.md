@@ -1,110 +1,59 @@
-# Actividad de Clasificación - Titanic
+# Actividad de Clasificación: Titanic
 
-Este repositorio contiene una solución completa para la actividad de clasificación del dataset Titanic. Incluye:
-- preparación y versionado de datos
-- limpieza y exploración
-- entrenamiento de dos modelos de clasificación
-- ajuste de hiperparámetros mediante validación cruzada
-- registro del experimento en MLflow
+Repositorio: Actividad_de_Clasificacion_dataset_Titanic
 
-## Estructura del repositorio
+Este repositorio contiene el código, notebook y guías para reproducir la actividad solicitada: preparación de datos, entrenamiento y ajuste de modelos, y registro de experimentos con MLflow.
 
-```text
-Actividad5/
-│── datos/
-│   ├── datos_ini/
-│   │   └── titanic.csv
-│   └── datos_limp/
-│       └── titanic_limpio.csv
-│── fuentes/
-│   ├── entrena.ipynb
-│   ├── datos_prep.py
-│   └── train.py
-│── README.md
-│── CHANGELOG.md
-│── requirements.txt
-│── .gitignore
-└── mlruns/
-```
+Estructura del repositorio
 
-## Objetivo
+Actividad_de_Clasificacion_dataset_Titanic/
+├── datos/
+│   ├── datos_ini/ (se descarga titanic.csv al ejecutar los scripts)
+│   └── datos_limp/ (placeholder)
+├── fuentes/
+│   ├── entrena.ipynb (notebook listo para Colab)
+│   ├── datos_prep.py (funciones de limpieza y carga)
+│   └── train.py (script para entrenamiento y registro en MLflow)
+├── README.md (este archivo)
+├── CHANGELOG.md
+└── requirements.txt
 
-Preparar los datos, entrenar modelos de clasificación, ajustar hiperparámetros y registrar resultados con MLflow para comparar el rendimiento de dos algoritmos sobre el dataset Titanic.
+Requisitos
 
-## Dataset
+Instalar (por ejemplo en Colab ejecuta):
 
-La fuente original es el dataset público Titanic disponible en el paquete `seaborn` y también se incluye una versión local en `datos/datos_ini/titanic.csv`.
+!pip install scikit-learn pandas mlflow xgboost joblib seaborn matplotlib
 
-## Requisitos
+Instrucciones de reproducción (Colab o local)
 
-- Python 3.10+
-- Jupyter Notebook
-- Pip
+1. Abrir `fuentes/entrena.ipynb` en Colab y ejecutar las celdas en orden. Esto:
+   - instalará dependencias
+   - descargará el dataset Titanic y lo almacenará en datos/datos_ini/titanic.csv
+   - ejecutará `fuentes/train.py` para RandomForest y LogisticRegression
+   - registrará resultados en `mlruns/` (directorio local)
 
-## Instalación
+2. Alternativamente ejecutar localmente:
+   - python3 -m venv venv && source venv/bin/activate
+   - pip install -r requirements.txt
+   - python3 fuentes/train.py --model rf --n-splits 5 --experiment-name Titanic_Actividad5
+   - python3 fuentes/train.py --model lr --n-splits 5 --experiment-name Titanic_Actividad5
 
-```bash
-python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-```
+MLflow
 
-## Ejecución del entrenamiento
+El tracking URI por defecto es el directorio `mlruns/` dentro del repo (archivo). Para arrancar la interfaz localmente:
 
-```bash
-python fuentes/train.py
-```
+mlflow ui --backend-store-uri file://$(pwd)/mlruns
 
-Esto realizará:
-- limpieza de datos
-- división train/test
-- validación cruzada con `GridSearchCV`
-- evaluación con métricas estandarizadas
-- registro de parámetros, métricas y artefactos en MLflow
+Evaluación y métricas
 
-## Ejecución del notebook
+Se registran métricas promedios por validación cruzada: accuracy, precision, recall y f1. Además se guardan los artefactos `best_model_{model}.pkl` y `summary.json` con parámetros y métricas.
 
-```bash
-jupyter notebook fuentes/entrena.ipynb
-```
+Decisiones y consideraciones
 
-## MLflow
+- Se usó LogisticRegression y RandomForest para comparación (clasificación binaria: Survived).
+- Se hicieron transformaciones simples: imputación por mediana para Age/Fare y one-hot para Embarked.
+- Se realizó búsqueda de hiperparámetros con GridSearchCV y validación estratificada.
 
-La URI local de tracking es:
+Contacto
 
-```bash
-file:///.../Actividad_de_Clasificacion_dataset_Titanic/mlruns
-```
-
-Para visualizar la interfaz local:
-
-```bash
-mlflow ui --backend-store-uri file://$PWD/mlruns
-```
-
-Luego acceder a http://localhost:5000
-
-## Modelos evaluados
-
-1. Regresión logística
-2. Random Forest
-
-## Métricas
-
-- accuracy
-- precision
-- recall
-- f1_score
-- roc_auc
-
-## Decisiones de diseño
-
-- Se eliminan columnas irrelevantes para la predicción (`PassengerId`, `Name`, `Ticket`, `Cabin`).
-- Los valores faltantes se imputan con estrategias razonables por tipo de dato.
-- Se aplica un preprocesamiento con `OneHotEncoder` para variables categóricas.
-- Las variables numéricas se escalan cuando es necesario.
-- Se usa validación cruzada estratificada con 5 folds.
-
-## Contribución
-
-La actividad está enfocada en reproducibilidad, trazabilidad y comparabilidad de resultados, cumpliendo con la lógica de su rubrica.
+Repositorio creado para la entrega de la actividad. Si necesitas que suba resultados de MLflow (capturas de pantalla) o que ejecute entrenamientos remotos, indícalo.
